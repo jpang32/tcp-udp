@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netdb.h>
+
 #define PORT_NO "8000"
+#define BACKLOG 5
 
 /*
  * TODO: implement the server yourself.
@@ -65,6 +67,7 @@ int run_server()
     *addr_info = (struct addrinfo) {
         .ai_family = PF_INET, 
         .ai_socktype = SOCK_RAW
+        // .ai_protocol = IPPROTO_RAW
     };
 
     // 
@@ -76,29 +79,29 @@ int run_server()
         printf("Successfully creating addrinfo\n");
     }
 
-    printf("addrlen: %d\n", res->ai_addrlen);
-    printf("addr_info ipv4: %s\n", res->ai_addr->sa_data);
-    printf("addr_info ipv6: %s\n", res->ai_next->ai_addr->sa_data);
-
     // AF_INET, SOCKET_RAW, ??
     int raw_socket = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
     printf("socket: %d\n", raw_socket);
 
+    char *opt = NULL;
     if (bind(raw_socket, res->ai_addr, res->ai_addrlen) != 0) {
-        printf("Error binding socket to address: %d\n", c);
-        return EXIT_FAILURE;
-    } else {
-        printf("Successfully bound socket to address\n");
+        opt = "bind";
+        goto failure;
     }
 
-    if (bind(raw_socket, res->ai_addr, res->ai_addrlen) != 0) {
-        printf("Error binding socket to address: %d\n", c);
-        return EXIT_FAILURE;
-    } else {
-        printf("Successfully bound socket to address\n");
+    if (listen(raw_socket, BACKLOG) != 0) {
+        opt = "listen";
+        goto failure;
     }
 
-    while()
+failure:
+    if (opt != NULL) {
+        // TODO: Insert which operation failed by writing your own custom logging function
+        perror("Operation failed");
+    }
+
+    free(addr_info);
+    free(res);
 
     // If you want, next time you come around to this: let's jump to the section on
     // binding and listening, and then we can go forward with the protocol implementation
